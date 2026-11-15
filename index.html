@@ -6,6 +6,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="theme-color" content="#05070a" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>FC LEAGUE • 5×5</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -146,7 +149,12 @@
       </div>
 
       <div class="space-y-3 bg-black/40 p-4 rounded-2xl border border-white/[0.07]">
-        <p class="text-[11px] font-extrabold uppercase tracking-wider text-[#c6ff00]">2 отдельные ссылки:</p>
+        <div class="flex items-center justify-between">
+          <p class="text-[11px] font-extrabold uppercase tracking-wider text-[#c6ff00]">2 чистые ссылки:</p>
+          <button onclick="forceCloudSync()" class="text-[10px] font-bold text-slate-300 bg-white/10 px-2 py-1 rounded-lg flex items-center gap-1 active:scale-95">
+            <i data-lucide="refresh-cw" class="w-3 h-3 text-[#c6ff00]"></i> Обновить из облака
+          </button>
+        </div>
         <div class="space-y-2.5 text-[11px]">
           <div>
             <span class="text-slate-400 block mb-1">1. Для друзей (Зритель):</span>
@@ -234,7 +242,7 @@
   <script>
     const DEFAULT_PIN = "0000";
     const DEFAULT_SECRET = "coach2026";
-    const STORAGE_KEY = "football_league_v2";
+    const STORAGE_KEY = "football_league_v3";
 
     // Автоматически внедрённые ключи Supabase
     const HARDCODED_SUPABASE_URL = "https://wmkobbusznoeamnfkatn.supabase.co";
@@ -323,7 +331,7 @@
 
     function loadLocalState() {
       try {
-        const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem("football_league_v1");
+        const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem("football_league_v2");
         if (raw) return { ...createDefaultData(), ...JSON.parse(raw) };
       } catch (e) {}
       return createDefaultData();
@@ -359,11 +367,16 @@
         });
         const rows = await res.json();
         if (rows && rows[0] && rows[0].data) {
-          state = { ...state, ...rows[0].data };
+          state = { ...createDefaultData(), ...rows[0].data };
           localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
           render();
         }
       } catch (e) {}
+    }
+
+    async function forceCloudSync() {
+      await syncFromCloud();
+      alert("Данные успешно обновлены из облака!");
     }
 
     (function checkUrlMode() {
@@ -503,7 +516,6 @@
         r.gd = r.gf - r.ga;
       });
 
-      // Сортировка: Очки -> Разница мячей -> Забитые мячи -> Личная встреча
       rows.sort((a, b) => {
         if (b.pts !== a.pts) return b.pts - a.pts;
         if (b.gd !== a.gd) return b.gd - a.gd;
@@ -586,12 +598,10 @@
           <div onclick="openTeam('${team.id}')" style="box-shadow: 0 12px 28px -10px ${theme.glow};"
             class="stadium-card pitch-pattern rounded-3xl p-4 relative overflow-hidden cursor-pointer active:scale-[0.98] transition">
 
-            <!-- Цветная полоса-акцент сверху -->
             <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${theme.gradient}"></div>
 
             <div class="flex items-center justify-between gap-3">
               <div class="flex items-center gap-3.5 min-w-0 flex-1">
-                <!-- Эмблема / Номер -->
                 <div class="w-14 h-14 rounded-2xl bg-gradient-to-br ${theme.gradient} ${theme.text} flex flex-col items-center justify-center shadow-lg border border-white/20 shrink-0">
                   <span class="text-[9px] font-black uppercase opacity-70">CLUB</span>
                   <span class="font-display text-lg font-black leading-none">0${idx + 1}</span>
@@ -607,7 +617,6 @@
                     <h3 class="font-display text-base font-black text-white truncate uppercase">${esc(team.name)}</h3>
                   `}
 
-                  <!-- Мини-аватары состава -->
                   <div class="flex items-center gap-2 mt-2">
                     <div class="flex -space-x-2">
                       ${avatars.map(p => p.photo
@@ -661,7 +670,7 @@
       }
     }
 
-    // === 1.2 ВНУТРИ КОМАНДЫ (5 ИГРОКОВ + СЛЕДУЮЩИЕ МАТЧИ) ===
+    // === 1.2 ВНУТРИ КОМАНДЫ ===
     function renderTeamDetail(app) {
       const team = getTeamById(selectedTeamId);
       const theme = JERSEY_THEMES[team.colorIdx % JERSEY_THEMES.length];
@@ -670,7 +679,6 @@
         .sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
 
       let html = `
-        <!-- ШАПКА КОМАНДЫ -->
         <div class="stadium-card rounded-3xl p-4 relative overflow-hidden">
           <div class="absolute inset-0 bg-gradient-to-r ${theme.gradient} opacity-15"></div>
           <div class="relative flex items-center gap-3">
@@ -687,7 +695,6 @@
           </div>
         </div>
 
-        <!-- 5 СТРОК ИГРОКОВ -->
         <div class="space-y-2.5">
           <div class="flex items-center justify-between px-1">
             <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Состав (5 игроков)</span>
@@ -731,7 +738,6 @@
 
       html += `</div>`;
 
-      // СЛЕДУЮЩИЕ МАТЧИ ЭТОЙ КОМАНДЫ
       html += `
         <div class="space-y-2.5 pt-2">
           <div class="flex items-center justify-between px-1">
@@ -783,7 +789,7 @@
       }
     }
 
-    // === 1.3 ПРОФИЛЬ ИГРОКА (КАРТОЧКА ИГРОКА + ФОТО + СТРОКИ ИГР) ===
+    // === 1.3 ПРОФИЛЬ ИГРОКА ===
     function openPlayerModal(teamId, playerId) {
       activePlayerRef = { teamId, playerId };
       renderPlayerModal();
@@ -816,7 +822,6 @@
           </button>
         </div>
 
-        <!-- БОЛЬШОЕ ПОРТРЕТНОЕ ФОТО ИГРОКА -->
         <div class="flex flex-col items-center text-center space-y-3">
           <div class="relative w-48 h-48 rounded-[28px] overflow-hidden bg-gradient-to-b from-white/10 to-black border-2 border-white/15 shadow-2xl flex items-center justify-center">
             ${player.photo
@@ -839,7 +844,6 @@
           <h3 class="font-display text-xl font-black text-white uppercase tracking-tight">${esc(player.name)}</h3>
         </div>
 
-        <!-- ПЛИТКИ СТАТИСТИКИ -->
         <div class="grid grid-cols-3 gap-2.5">
           <div class="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-3 text-center">
             <div class="font-display text-2xl font-black text-white">${st.goals}</div>
@@ -856,7 +860,6 @@
         </div>
       `;
 
-      // ДОБАВЛЕНИЕ ЗАПИСИ РАЗРАБОТЧИКОМ
       if (isDev) {
         html += `
           <div class="bg-white/[0.04] border border-[#c6ff00]/30 rounded-2xl p-4 space-y-3">
@@ -879,7 +882,6 @@
         `;
       }
 
-      // СПИСОК МАТЧЕЙ ИГРОКА
       html += `
         <div class="space-y-2">
           <h4 class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Матчи игрока (${(player.logs || []).length})</h4>
@@ -960,7 +962,7 @@
       }
     }
 
-    // === 2. МАТЧИ (БЛОКИ ПО ДАТАМ) ===
+    // === 2. МАТЧИ ===
     function renderMatchesTab(app) {
       let html = `
         <div class="flex items-end justify-between px-0.5">
@@ -1030,13 +1032,11 @@
             html += `
               <div class="bg-black/45 border border-white/[0.07] rounded-2xl p-3.5 space-y-2.5">
                 <div class="flex items-center justify-between gap-2">
-                  <!-- Команда А -->
                   <div class="flex items-center gap-2 min-w-0 flex-1">
                     <span class="w-3.5 h-3.5 rounded-md bg-gradient-to-br ${thA.gradient} border border-white/25 shrink-0"></span>
                     <span class="text-sm font-extrabold text-white truncate">${esc(tA.name)}</span>
                   </div>
 
-                  <!-- Центр: Время или Счёт -->
                   <div class="shrink-0">
                     ${hasScore ? `
                       <div class="px-3 py-1 rounded-xl bg-[#c6ff00] text-black font-display font-black text-xs">
@@ -1049,7 +1049,6 @@
                     `}
                   </div>
 
-                  <!-- Команда Б -->
                   <div class="flex items-center justify-end gap-2 min-w-0 flex-1">
                     <span class="text-sm font-extrabold text-white truncate">${esc(tB.name)}</span>
                     <span class="w-3.5 h-3.5 rounded-md bg-gradient-to-br ${thB.gradient} border border-white/25 shrink-0"></span>
@@ -1208,7 +1207,7 @@
       app.innerHTML = html;
     }
 
-    // === 4. СТАТИСТИКА ТУРНИРА (ГОЛ+ПАС, БОМБАРДИРЫ, АССИСТЕНТЫ) ===
+    // === 4. СТАТИСТИКА ТУРНИРА ===
     function renderStatsTab(app) {
       const allPlayers = [];
       state.teams.forEach(team => {
@@ -1244,7 +1243,6 @@
           <span class="text-[11px] text-slate-400 font-semibold">Авторасчёт</span>
         </div>
 
-        <!-- ПЕРЕКЛЮЧАТЕЛЬ 3 РАЗДЕЛОВ -->
         <div class="grid grid-cols-3 gap-1.5 bg-white/[0.04] p-1.5 rounded-2xl border border-white/[0.08]">
           <button onclick="statsSubTab='gp'; render();" class="py-2.5 px-2 rounded-xl text-[11px] font-extrabold uppercase tracking-wide transition ${statsSubTab === 'gp' ? 'volt-btn text-black' : 'text-slate-400'}">
             Гол + Пас
@@ -1257,7 +1255,6 @@
           </button>
         </div>
 
-        <!-- КАРТОЧКА ЛИДЕРА (MVP РАЗДЕЛА) -->
         ${leader ? `
           <div onclick="openPlayerModal('${leader.teamId}', '${leader.id}')" class="stadium-card pitch-pattern rounded-3xl p-4 border border-[#c6ff00]/35 flex items-center justify-between gap-3 cursor-pointer active:scale-[0.99]">
             <div class="flex items-center gap-3.5 min-w-0">
@@ -1285,7 +1282,6 @@
           </div>
         ` : ""}
 
-        <!-- ТАБЛИЦА ВСЕХ МЕСТ -->
         <div class="stadium-card rounded-3xl overflow-hidden">
           <div class="px-4 py-3 bg-white/[0.03] border-b border-white/[0.07] flex items-center justify-between">
             <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-300">Таблица • ${sectionTitle}</span>
@@ -1335,9 +1331,11 @@
 
     // === МОДАЛКА ССЫЛОК И ОБЛАКА ===
     function openCloudModal() {
-      const baseUrl = window.location.origin + window.location.pathname;
-      document.getElementById("viewer-link-preview").textContent = baseUrl;
-      document.getElementById("admin-link-preview").textContent = `${baseUrl}?admin=${state.adminSecret}`;
+      // Автоматически строим чистый базовый URL без параметров
+      const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+      
+      document.getElementById("viewer-link-preview").textContent = cleanUrl;
+      document.getElementById("admin-link-preview").textContent = `${cleanUrl}?admin=${state.adminSecret}`;
 
       const devBlock = document.getElementById("dev-settings-block");
       if (isDev) {
