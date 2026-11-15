@@ -150,9 +150,9 @@
 
       <div class="space-y-3 bg-black/40 p-4 rounded-2xl border border-white/[0.07]">
         <div class="flex items-center justify-between">
-          <p class="text-[11px] font-extrabold uppercase tracking-wider text-[#c6ff00]">2 чистые ссылки:</p>
-          <button onclick="forceCloudSync()" class="text-[10px] font-bold text-slate-300 bg-white/10 px-2 py-1 rounded-lg flex items-center gap-1 active:scale-95">
-            <i data-lucide="refresh-cw" class="w-3 h-3 text-[#c6ff00]"></i> Обновить из облака
+          <p class="text-[11px] font-extrabold uppercase tracking-wider text-[#c6ff00]">Прямые ссылки:</p>
+          <button onclick="forceCloudSync()" class="text-[10px] font-bold text-slate-300 bg-white/10 px-2.5 py-1 rounded-lg flex items-center gap-1 active:scale-95">
+            <i data-lucide="refresh-cw" class="w-3 h-3 text-[#c6ff00]"></i> Обновить
           </button>
         </div>
         <div class="space-y-2.5 text-[11px]">
@@ -161,7 +161,7 @@
             <code id="viewer-link-preview" class="block bg-black/80 border border-white/10 p-2.5 rounded-xl text-slate-200 break-all font-mono"></code>
           </div>
           <div>
-            <span class="text-slate-400 block mb-1">2. Для тебя (Разработчик):</span>
+            <span class="text-slate-400 block mb-1">2. Для тебя (Тренер):</span>
             <code id="admin-link-preview" class="block bg-black/80 border border-[#c6ff00]/30 p-2.5 rounded-xl text-[#c6ff00] break-all font-mono"></code>
           </div>
         </div>
@@ -177,13 +177,12 @@
           <input id="admin-secret-input" type="text" class="w-full bg-black/50 border border-white/15 rounded-xl px-3 py-2 text-sm text-white" />
         </div>
         <div class="border-t border-white/10 pt-3 space-y-2">
-          <p class="text-[11px] font-extrabold uppercase text-emerald-400">Облако Supabase (для синхронизации)</p>
+          <p class="text-[11px] font-extrabold uppercase text-emerald-400">Облако Supabase</p>
           <input id="sb-url-input" type="text" placeholder="https://xxxx.supabase.co" class="w-full bg-black/50 border border-white/15 rounded-xl px-3 py-2 text-xs text-white" />
           <input id="sb-key-input" type="text" placeholder="Anon Public Key (eyJ...)" class="w-full bg-black/50 border border-white/15 rounded-xl px-3 py-2 text-xs text-white" />
         </div>
         <button onclick="saveSettings()" class="w-full py-3 rounded-xl volt-btn font-display text-xs font-black uppercase">Сохранить настройки</button>
 
-        <!-- СБРОС СЕЗОНА В НАСТРОЙКАХ -->
         <div class="border-t border-rose-500/25 pt-3 space-y-2">
           <p class="text-[11px] font-extrabold uppercase text-rose-400">Управление сезоном</p>
           <button onclick="closeCloudModal(); openResetModal();" class="w-full py-3 rounded-xl bg-rose-500/15 border border-rose-500/35 text-rose-400 font-display text-xs font-black uppercase active:scale-95 transition flex items-center justify-center gap-2">
@@ -226,7 +225,7 @@
             <span class="text-xs font-extrabold text-rose-400 uppercase">2. Новые команды (полный сброс)</span>
             <i data-lucide="trash-2" class="w-4 h-4 text-rose-400"></i>
           </div>
-          <p class="text-[11px] text-slate-400">Сбросить команды и игроков к стандартным (Белые, Чёрные, Красные, Синие) и очистить все матчи.</p>
+          <p class="text-[11px] text-slate-400">Сбросить команды и игроков к стандартным и очистить все матчи.</p>
         </button>
       </div>
 
@@ -234,7 +233,7 @@
     </div>
   </div>
 
-  <!-- МОДАЛЬНОЕ ОКНО: КАРТОЧКА ИГРОКА (ULTIMATE PLAYER CARD) -->
+  <!-- МОДАЛЬНОЕ ОКНО: КАРТОЧКА ИГРОКА -->
   <div id="player-modal" class="fixed inset-0 z-50 hidden bg-black/90 backdrop-blur-lg flex items-end sm:items-center justify-center">
     <div id="player-modal-content" class="bg-[#0b0f17] border-t sm:border border-white/15 rounded-t-[32px] sm:rounded-[32px] w-full max-w-md max-h-[93vh] overflow-y-auto p-5 space-y-4 shadow-2xl"></div>
   </div>
@@ -242,54 +241,17 @@
   <script>
     const DEFAULT_PIN = "0000";
     const DEFAULT_SECRET = "coach2026";
-    const STORAGE_KEY = "football_league_v3";
+    const STORAGE_KEY = "football_league_v4";
 
-    // Автоматически внедрённые ключи Supabase
     const HARDCODED_SUPABASE_URL = "https://wmkobbusznoeamnfkatn.supabase.co";
     const HARDCODED_SUPABASE_KEY = "Sb_publishable_fqyLqgM24h-U3Y6cJA5Yug_fjIQ2inv";
 
-    // Стили комплектов формы (Джерси)
     const JERSEY_THEMES = [
-      {
-        name: "Белые",
-        gradient: "from-zinc-100 via-white to-zinc-300",
-        text: "text-zinc-950",
-        accent: "#ffffff",
-        border: "border-white/40",
-        glow: "rgba(255,255,255,0.18)"
-      },
-      {
-        name: "Чёрные",
-        gradient: "from-zinc-800 via-neutral-900 to-black",
-        text: "text-white",
-        accent: "#52525b",
-        border: "border-zinc-600/50",
-        glow: "rgba(161,161,170,0.15)"
-      },
-      {
-        name: "Красные",
-        gradient: "from-rose-500 via-red-600 to-rose-900",
-        text: "text-white",
-        accent: "#f43f5e",
-        border: "border-rose-500/40",
-        glow: "rgba(244,63,94,0.22)"
-      },
-      {
-        name: "Синие",
-        gradient: "from-sky-400 via-blue-600 to-indigo-900",
-        text: "text-white",
-        accent: "#38bdf8",
-        border: "border-sky-400/40",
-        glow: "rgba(56,189,248,0.22)"
-      },
-      {
-        name: "Неон",
-        gradient: "from-[#d4ff33] via-[#a3e635] to-emerald-700",
-        text: "text-zinc-950",
-        accent: "#c6ff00",
-        border: "border-[#c6ff00]/50",
-        glow: "rgba(198,255,0,0.25)"
-      }
+      { name: "Белые", gradient: "from-zinc-100 via-white to-zinc-300", text: "text-zinc-950", accent: "#ffffff", border: "border-white/40", glow: "rgba(255,255,255,0.18)" },
+      { name: "Чёрные", gradient: "from-zinc-800 via-neutral-900 to-black", text: "text-white", accent: "#52525b", border: "border-zinc-600/50", glow: "rgba(161,161,170,0.15)" },
+      { name: "Красные", gradient: "from-rose-500 via-red-600 to-rose-900", text: "text-white", accent: "#f43f5e", border: "border-rose-500/40", glow: "rgba(244,63,94,0.22)" },
+      { name: "Синие", gradient: "from-sky-400 via-blue-600 to-indigo-900", text: "text-white", accent: "#38bdf8", border: "border-sky-400/40", glow: "rgba(56,189,248,0.22)" },
+      { name: "Неон", gradient: "from-[#d4ff33] via-[#a3e635] to-emerald-700", text: "text-zinc-950", accent: "#c6ff00", border: "border-[#c6ff00]/50", glow: "rgba(198,255,0,0.25)" }
     ];
 
     function createDefaultTeams() {
@@ -331,7 +293,7 @@
 
     function loadLocalState() {
       try {
-        const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem("football_league_v2");
+        const raw = localStorage.getItem(STORAGE_KEY);
         if (raw) return { ...createDefaultData(), ...JSON.parse(raw) };
       } catch (e) {}
       return createDefaultData();
@@ -376,6 +338,7 @@
 
     async function forceCloudSync() {
       await syncFromCloud();
+      render();
       alert("Данные успешно обновлены из облака!");
     }
 
@@ -460,7 +423,6 @@
       return state.teams.find(t => t.id === id) || { name: "Команда", colorIdx: 0 };
     }
 
-    // === РАСЧЁТ ТУРНИРНОЙ ТАБЛИЦЫ ===
     function calculateStandings() {
       const rows = state.teams.map(t => ({
         id: t.id,
@@ -512,10 +474,7 @@
         }
       });
 
-      rows.forEach(r => {
-        r.gd = r.gf - r.ga;
-      });
-
+      rows.forEach(r => { r.gd = r.gf - r.ga; });
       rows.sort((a, b) => {
         if (b.pts !== a.pts) return b.pts - a.pts;
         if (b.gd !== a.gd) return b.gd - a.gd;
@@ -575,7 +534,6 @@
       lucide.createIcons();
     }
 
-    // === 1. КОМАНДЫ (КЛУБНЫЕ КАРТОЧКИ) ===
     function renderTeamsList(app) {
       let html = `
         <div class="flex items-end justify-between px-0.5">
@@ -597,26 +555,19 @@
         html += `
           <div onclick="openTeam('${team.id}')" style="box-shadow: 0 12px 28px -10px ${theme.glow};"
             class="stadium-card pitch-pattern rounded-3xl p-4 relative overflow-hidden cursor-pointer active:scale-[0.98] transition">
-
             <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${theme.gradient}"></div>
-
             <div class="flex items-center justify-between gap-3">
               <div class="flex items-center gap-3.5 min-w-0 flex-1">
                 <div class="w-14 h-14 rounded-2xl bg-gradient-to-br ${theme.gradient} ${theme.text} flex flex-col items-center justify-center shadow-lg border border-white/20 shrink-0">
                   <span class="text-[9px] font-black uppercase opacity-70">CLUB</span>
                   <span class="font-display text-lg font-black leading-none">0${idx + 1}</span>
                 </div>
-
                 <div class="min-w-0 flex-1">
                   ${isDev ? `
-                    <input type="text" value="${esc(team.name)}"
-                      onclick="event.stopPropagation()"
-                      onchange="updateTeamName('${team.id}', this.value)"
-                      class="w-full bg-black/60 border border-white/20 rounded-xl px-2.5 py-1.5 font-display text-sm font-black text-white focus:outline-none focus:border-[#c6ff00]" />
+                    <input type="text" value="${esc(team.name)}" onclick="event.stopPropagation()" onchange="updateTeamName('${team.id}', this.value)" class="w-full bg-black/60 border border-white/20 rounded-xl px-2.5 py-1.5 font-display text-sm font-black text-white focus:outline-none focus:border-[#c6ff00]" />
                   ` : `
                     <h3 class="font-display text-base font-black text-white truncate uppercase">${esc(team.name)}</h3>
                   `}
-
                   <div class="flex items-center gap-2 mt-2">
                     <div class="flex -space-x-2">
                       ${avatars.map(p => p.photo
@@ -628,7 +579,6 @@
                   </div>
                 </div>
               </div>
-
               <div class="flex items-center gap-1.5 shrink-0">
                 ${isDev ? `
                   <button onclick="event.stopPropagation(); cycleTeamColor('${team.id}')" title="Цвет формы" class="w-9 h-9 rounded-xl bg-white/[0.06] border border-white/10 flex items-center justify-center text-slate-200 active:scale-90">
@@ -643,7 +593,6 @@
           </div>
         `;
       });
-
       html += `</div>`;
       app.innerHTML = html;
     }
@@ -670,7 +619,6 @@
       }
     }
 
-    // === 1.2 ВНУТРИ КОМАНДЫ ===
     function renderTeamDetail(app) {
       const team = getTeamById(selectedTeamId);
       const theme = JERSEY_THEMES[team.colorIdx % JERSEY_THEMES.length];
@@ -689,9 +637,7 @@
               <span class="text-[10px] font-extrabold uppercase tracking-widest text-[#c6ff00]">Заявка на турнир</span>
               <h2 class="font-display text-lg font-black text-white uppercase truncate">${esc(team.name)}</h2>
             </div>
-            <div class="w-10 h-10 rounded-2xl bg-gradient-to-br ${theme.gradient} ${theme.text} flex items-center justify-center font-display font-black text-xs shadow">
-              5×5
-            </div>
+            <div class="w-10 h-10 rounded-2xl bg-gradient-to-br ${theme.gradient} ${theme.text} flex items-center justify-center font-display font-black text-xs shadow">5×5</div>
           </div>
         </div>
 
@@ -709,18 +655,12 @@
             <div class="relative shrink-0">
               ${player.photo
                 ? `<img src="${player.photo}" class="w-[52px] h-[52px] rounded-2xl object-cover border border-white/15" />`
-                : `<div class="w-[52px] h-[52px] rounded-2xl bg-white/[0.04] border border-white/10 flex flex-col items-center justify-center">
-                    <span class="font-display text-sm font-black text-slate-400">0${idx + 1}</span>
-                   </div>`
+                : `<div class="w-[52px] h-[52px] rounded-2xl bg-white/[0.04] border border-white/10 flex flex-col items-center justify-center"><span class="font-display text-sm font-black text-slate-400">0${idx + 1}</span></div>`
               }
             </div>
-
             <div class="flex-1 min-w-0">
               ${isDev ? `
-                <input type="text" value="${esc(player.name)}" placeholder="Фамилия Имя"
-                  onclick="event.stopPropagation()"
-                  onchange="updatePlayerName('${team.id}', '${player.id}', this.value)"
-                  class="w-full bg-black/60 border border-white/15 rounded-xl px-2.5 py-1 text-sm font-bold text-white focus:outline-none focus:border-[#c6ff00]" />
+                <input type="text" value="${esc(player.name)}" placeholder="Фамилия Имя" onclick="event.stopPropagation()" onchange="updatePlayerName('${team.id}', '${player.id}', this.value)" class="w-full bg-black/60 border border-white/15 rounded-xl px-2.5 py-1 text-sm font-bold text-white focus:outline-none focus:border-[#c6ff00]" />
               ` : `
                 <p class="text-sm font-extrabold text-white truncate">${esc(player.name)}</p>
               `}
@@ -730,12 +670,10 @@
                 <span class="text-[11px] px-2 py-0.5 rounded-md bg-[#c6ff00]/15 text-[#c6ff00] font-extrabold">Г+П: ${st.gp}</span>
               </div>
             </div>
-
             <i data-lucide="chevron-right" class="w-4 h-4 text-slate-500 shrink-0"></i>
           </div>
         `;
       });
-
       html += `</div>`;
 
       html += `
@@ -756,26 +694,17 @@
           html += `
             <div class="stadium-card rounded-2xl p-3.5 flex items-center justify-between gap-2">
               <div class="min-w-0 flex-1">
-                <div class="text-sm font-extrabold text-white truncate">
-                  ${esc(tA.name)} <span class="text-[#c6ff00] font-black mx-1">VS</span> ${esc(tB.name)}
-                </div>
+                <div class="text-sm font-extrabold text-white truncate">${esc(tA.name)} <span class="text-[#c6ff00] font-black mx-1">VS</span> ${esc(tB.name)}</div>
                 <div class="text-xs text-slate-400 mt-1 flex items-center gap-3 font-medium">
                   <span class="flex items-center gap-1"><i data-lucide="calendar" class="w-3.5 h-3.5 text-[#c6ff00]"></i> ${formatDateRu(m.date)}</span>
                   <span class="flex items-center gap-1"><i data-lucide="clock" class="w-3.5 h-3.5 text-slate-400"></i> ${esc(m.time || "--:--")}</span>
                 </div>
               </div>
-              ${hasScore ? `
-                <div class="px-3 py-1.5 rounded-xl bg-[#c6ff00]/15 border border-[#c6ff00]/30 text-[#c6ff00] font-display font-black text-xs">
-                  ${esc(m.scoreA)}:${esc(m.scoreB)}
-                </div>
-              ` : `
-                <span class="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-lg bg-white/[0.06] text-slate-300">Матч</span>
-              `}
+              ${hasScore ? `<div class="px-3 py-1.5 rounded-xl bg-[#c6ff00]/15 border border-[#c6ff00]/30 text-[#c6ff00] font-display font-black text-xs">${esc(m.scoreA)}:${esc(m.scoreB)}</div>` : `<span class="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-lg bg-white/[0.06] text-slate-300">Матч</span>`}
             </div>
           `;
         });
       }
-
       html += `</div>`;
       app.innerHTML = html;
     }
@@ -789,7 +718,6 @@
       }
     }
 
-    // === 1.3 ПРОФИЛЬ ИГРОКА ===
     function openPlayerModal(teamId, playerId) {
       activePlayerRef = { teamId, playerId };
       renderPlayerModal();
@@ -805,7 +733,6 @@
     function renderPlayerModal() {
       if (!activePlayerRef) return;
       const team = getTeamById(activePlayerRef.teamId);
-      const theme = JERSEY_THEMES[team.colorIdx % JERSEY_THEMES.length];
       const player = team.players.find(p => p.id === activePlayerRef.playerId);
       if (!player) return;
 
@@ -814,25 +741,15 @@
 
       let html = `
         <div class="flex items-center justify-between">
-          <span class="text-[11px] font-extrabold uppercase tracking-wider px-3 py-1 rounded-full bg-white/[0.07] text-slate-200 border border-white/10">
-            ${esc(team.name)}
-          </span>
-          <button onclick="closePlayerModal()" class="w-9 h-9 rounded-full bg-white/[0.07] flex items-center justify-center text-slate-300 active:scale-90">
-            <i data-lucide="x" class="w-5 h-5"></i>
-          </button>
+          <span class="text-[11px] font-extrabold uppercase tracking-wider px-3 py-1 rounded-full bg-white/[0.07] text-slate-200 border border-white/10">${esc(team.name)}</span>
+          <button onclick="closePlayerModal()" class="w-9 h-9 rounded-full bg-white/[0.07] flex items-center justify-center text-slate-300 active:scale-90"><i data-lucide="x" class="w-5 h-5"></i></button>
         </div>
 
         <div class="flex flex-col items-center text-center space-y-3">
           <div class="relative w-48 h-48 rounded-[28px] overflow-hidden bg-gradient-to-b from-white/10 to-black border-2 border-white/15 shadow-2xl flex items-center justify-center">
-            ${player.photo
-              ? `<img src="${player.photo}" class="w-full h-full object-cover" />`
-              : `<i data-lucide="user" class="w-20 h-20 text-slate-600"></i>`
-            }
-            <div class="absolute bottom-2 right-2 px-2.5 py-1 rounded-xl bg-black/80 backdrop-blur border border-white/15 font-display text-xs font-black text-[#c6ff00]">
-              ${st.gp} Г+П
-            </div>
+            ${player.photo ? `<img src="${player.photo}" class="w-full h-full object-cover" />` : `<i data-lucide="user" class="w-20 h-20 text-slate-600"></i>`}
+            <div class="absolute bottom-2 right-2 px-2.5 py-1 rounded-xl bg-black/80 backdrop-blur border border-white/15 font-display text-xs font-black text-[#c6ff00]">${st.gp} Г+П</div>
           </div>
-
           ${isDev ? `
             <label class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/[0.07] border border-white/15 text-xs font-bold text-[#c6ff00] cursor-pointer active:scale-95">
               <i data-lucide="camera" class="w-4 h-4"></i>
@@ -840,7 +757,6 @@
               <input type="file" accept="image/*" class="hidden" onchange="handlePlayerPhoto(event)" />
             </label>
           ` : ""}
-
           <h3 class="font-display text-xl font-black text-white uppercase tracking-tight">${esc(player.name)}</h3>
         </div>
 
@@ -875,18 +791,12 @@
                 <input id="log-assists-input" type="number" inputmode="numeric" min="0" value="0" class="w-full bg-black/60 border border-white/15 rounded-xl px-3 py-2 text-base font-black text-white" />
               </div>
             </div>
-            <button onclick="addPlayerLog()" class="w-full py-3 rounded-xl volt-btn font-display text-xs font-black uppercase tracking-wider active:scale-95 transition">
-              Добавить в статистику
-            </button>
+            <button onclick="addPlayerLog()" class="w-full py-3 rounded-xl volt-btn font-display text-xs font-black uppercase tracking-wider active:scale-95 transition">Добавить в статистику</button>
           </div>
         `;
       }
 
-      html += `
-        <div class="space-y-2">
-          <h4 class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Матчи игрока (${(player.logs || []).length})</h4>
-      `;
-
+      html += `<div class="space-y-2"><h4 class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Матчи игрока (${(player.logs || []).length})</h4>`;
       if (!player.logs || player.logs.length === 0) {
         html += `<p class="text-xs text-slate-500 text-center py-4">Записей пока нет</p>`;
       } else {
@@ -901,16 +811,11 @@
                   <span class="text-[#c6ff00] font-bold">+${Number(log.goals) + Number(log.assists)} очк.</span>
                 </div>
               </div>
-              ${isDev ? `
-                <button onclick="deletePlayerLog('${log.id}')" class="w-8 h-8 rounded-xl bg-rose-500/15 text-rose-400 flex items-center justify-center active:scale-90">
-                  <i data-lucide="trash-2" class="w-4 h-4"></i>
-                </button>
-              ` : ""}
+              ${isDev ? `<button onclick="deletePlayerLog('${log.id}')" class="w-8 h-8 rounded-xl bg-rose-500/15 text-rose-400 flex items-center justify-center active:scale-90"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : ""}
             </div>
           `;
         });
       }
-
       html += `</div>`;
       modal.innerHTML = html;
       lucide.createIcons();
@@ -940,12 +845,7 @@
       const player = team.players.find(p => p.id === activePlayerRef.playerId);
       if (player) {
         player.logs = player.logs || [];
-        player.logs.unshift({
-          id: "log_" + Date.now(),
-          matchTitle,
-          goals,
-          assists
-        });
+        player.logs.unshift({ id: "log_" + Date.now(), matchTitle, goals, assists });
         saveData();
         renderPlayerModal();
       }
@@ -962,7 +862,6 @@
       }
     }
 
-    // === 2. МАТЧИ ===
     function renderMatchesTab(app) {
       let html = `
         <div class="flex items-end justify-between px-0.5">
@@ -981,17 +880,13 @@
             <p class="text-[11px] font-extrabold uppercase tracking-wider text-[#c6ff00]">+ Назначить матч</p>
             <div class="grid grid-cols-2 gap-2">
               <select id="new-match-a" class="bg-black/60 border border-white/15 rounded-xl px-3 py-2.5 text-sm font-bold text-white">${options}</select>
-              <select id="new-match-b" class="bg-black/60 border border-white/15 rounded-xl px-3 py-2.5 text-sm font-bold text-white">
-                ${state.teams.map((t, i) => `<option value="${t.id}" ${i === 1 ? "selected" : ""}>${esc(t.name)}</option>`).join("")}
-              </select>
+              <select id="new-match-b" class="bg-black/60 border border-white/15 rounded-xl px-3 py-2.5 text-sm font-bold text-white">${state.teams.map((t, i) => `<option value="${t.id}" ${i === 1 ? "selected" : ""}>${esc(t.name)}</option>`).join("")}</select>
             </div>
             <div class="grid grid-cols-2 gap-2">
               <input id="new-match-date" type="date" value="2026-11-22" class="bg-black/60 border border-white/15 rounded-xl px-3 py-2 text-sm text-white" />
               <input id="new-match-time" type="time" value="19:00" class="bg-black/60 border border-white/15 rounded-xl px-3 py-2 text-sm text-white" />
             </div>
-            <button onclick="addMatch()" class="w-full py-3 rounded-xl volt-btn font-display text-xs font-black uppercase tracking-wider active:scale-95 transition">
-              Добавить в календарь
-            </button>
+            <button onclick="addMatch()" class="w-full py-3 rounded-xl volt-btn font-display text-xs font-black uppercase tracking-wider active:scale-95 transition">Добавить в календарь</button>
           </div>
         `;
       }
@@ -1018,10 +913,8 @@
                 </div>
                 <span class="text-[11px] text-slate-400 font-semibold">${groups[dateKey].length} игр.</span>
               </div>
-
               <div class="space-y-2.5">
           `;
-
           groups[dateKey].forEach(m => {
             const tA = getTeamById(m.teamA);
             const tB = getTeamById(m.teamB);
@@ -1036,50 +929,31 @@
                     <span class="w-3.5 h-3.5 rounded-md bg-gradient-to-br ${thA.gradient} border border-white/25 shrink-0"></span>
                     <span class="text-sm font-extrabold text-white truncate">${esc(tA.name)}</span>
                   </div>
-
                   <div class="shrink-0">
-                    ${hasScore ? `
-                      <div class="px-3 py-1 rounded-xl bg-[#c6ff00] text-black font-display font-black text-xs">
-                        ${esc(m.scoreA)} : ${esc(m.scoreB)}
-                      </div>
-                    ` : `
-                      <div class="px-2.5 py-1 rounded-xl bg-white/[0.06] border border-white/10 text-xs font-extrabold text-slate-200">
-                        ${esc(m.time || "--:--")}
-                      </div>
-                    `}
+                    ${hasScore ? `<div class="px-3 py-1 rounded-xl bg-[#c6ff00] text-black font-display font-black text-xs">${esc(m.scoreA)} : ${esc(m.scoreB)}</div>` : `<div class="px-2.5 py-1 rounded-xl bg-white/[0.06] border border-white/10 text-xs font-extrabold text-slate-200">${esc(m.time || "--:--")}</div>`}
                   </div>
-
                   <div class="flex items-center justify-end gap-2 min-w-0 flex-1">
                     <span class="text-sm font-extrabold text-white truncate">${esc(tB.name)}</span>
                     <span class="w-3.5 h-3.5 rounded-md bg-gradient-to-br ${thB.gradient} border border-white/25 shrink-0"></span>
                   </div>
                 </div>
-
                 ${isDev ? `
                   <div class="flex items-center justify-between pt-2 border-t border-white/[0.06] gap-2">
                     <div class="flex items-center gap-1.5">
                       <span class="text-[11px] text-slate-400 font-semibold">Счёт:</span>
-                      <input type="number" inputmode="numeric" placeholder="-" value="${esc(m.scoreA)}"
-                        onchange="updateMatchScore('${m.id}', 'scoreA', this.value)"
-                        class="w-11 text-center bg-black/70 border border-white/15 rounded-lg py-1 text-xs font-black text-[#c6ff00]" />
+                      <input type="number" inputmode="numeric" placeholder="-" value="${esc(m.scoreA)}" onchange="updateMatchScore('${m.id}', 'scoreA', this.value)" class="w-11 text-center bg-black/70 border border-white/15 rounded-lg py-1 text-xs font-black text-[#c6ff00]" />
                       <span class="text-slate-500 font-bold">:</span>
-                      <input type="number" inputmode="numeric" placeholder="-" value="${esc(m.scoreB)}"
-                        onchange="updateMatchScore('${m.id}', 'scoreB', this.value)"
-                        class="w-11 text-center bg-black/70 border border-white/15 rounded-lg py-1 text-xs font-black text-[#c6ff00]" />
+                      <input type="number" inputmode="numeric" placeholder="-" value="${esc(m.scoreB)}" onchange="updateMatchScore('${m.id}', 'scoreB', this.value)" class="w-11 text-center bg-black/70 border border-white/15 rounded-lg py-1 text-xs font-black text-[#c6ff00]" />
                     </div>
-                    <button onclick="deleteMatch('${m.id}')" class="w-8 h-8 rounded-lg bg-rose-500/15 text-rose-400 flex items-center justify-center">
-                      <i data-lucide="trash-2" class="w-4 h-4"></i>
-                    </button>
+                    <button onclick="deleteMatch('${m.id}')" class="w-8 h-8 rounded-lg bg-rose-500/15 text-rose-400 flex items-center justify-center"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                   </div>
                 ` : ""}
               </div>
             `;
           });
-
           html += `</div></div>`;
         });
       }
-
       app.innerHTML = html;
     }
 
@@ -1088,29 +962,15 @@
       const teamB = document.getElementById("new-match-b").value;
       const date = document.getElementById("new-match-date").value;
       const time = document.getElementById("new-match-time").value;
-      if (teamA === teamB) {
-        alert("Выберите две разные команды");
-        return;
-      }
-      state.matches.push({
-        id: "m_" + Date.now(),
-        date,
-        time,
-        teamA,
-        teamB,
-        scoreA: "",
-        scoreB: ""
-      });
+      if (teamA === teamB) { alert("Выберите две разные команды"); return; }
+      state.matches.push({ id: "m_" + Date.now(), date, time, teamA, teamB, scoreA: "", scoreB: "" });
       saveData();
       render();
     }
 
     function updateMatchScore(matchId, field, val) {
       const m = state.matches.find(x => x.id === matchId);
-      if (m) {
-        m[field] = val.trim();
-        saveData();
-      }
+      if (m) { m[field] = val.trim(); saveData(); }
     }
 
     function deleteMatch(matchId) {
@@ -1119,7 +979,6 @@
       render();
     }
 
-    // === 3. ТУРНИРНАЯ ТАБЛИЦА ===
     function renderTableTab(app) {
       const standings = calculateStandings();
       const totalPlayed = standings.reduce((acc, r) => acc + r.played, 0) / 2;
@@ -1132,12 +991,9 @@
           </div>
           ${isDev ? `
             <button onclick="openResetModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/15 border border-rose-500/35 text-rose-400 text-[11px] font-extrabold uppercase active:scale-95 transition">
-              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
-              <span>Сбросить</span>
+              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i><span>Сбросить</span>
             </button>
-          ` : `
-            <span class="text-[11px] text-slate-400 font-semibold">Сыграно: ${Math.floor(totalPlayed)}</span>
-          `}
+          ` : `<span class="text-[11px] text-slate-400 font-semibold">Сыграно: ${Math.floor(totalPlayed)}</span>`}
         </div>
 
         <div class="stadium-card rounded-3xl overflow-hidden">
@@ -1164,13 +1020,9 @@
         const theme = JERSEY_THEMES[row.colorIdx % JERSEY_THEMES.length];
         const gdStr = row.gd > 0 ? `+${row.gd}` : `${row.gd}`;
         const gdColor = row.gd > 0 ? "text-emerald-400" : (row.gd < 0 ? "text-rose-400" : "text-slate-400");
-
         let rankBadge = `<span class="font-display text-xs font-bold text-slate-500">${rank}</span>`;
-        if (rank === 1) {
-          rankBadge = `<span class="inline-flex w-5 h-5 rounded-md volt-btn font-display text-[10px] font-black items-center justify-center">1</span>`;
-        } else if (rank === 2) {
-          rankBadge = `<span class="inline-flex w-5 h-5 rounded-md bg-white/15 text-white font-display text-[10px] font-black items-center justify-center">2</span>`;
-        }
+        if (rank === 1) rankBadge = `<span class="inline-flex w-5 h-5 rounded-md volt-btn font-display text-[10px] font-black items-center justify-center">1</span>`;
+        else if (rank === 2) rankBadge = `<span class="inline-flex w-5 h-5 rounded-md bg-white/15 text-white font-display text-[10px] font-black items-center justify-center">2</span>`;
 
         html += `
           <tr onclick="selectedTeamId='${row.id}'; switchTab('teams');" class="active:bg-white/[0.04] cursor-pointer transition">
@@ -1191,38 +1043,16 @@
           </tr>
         `;
       });
-
-      html += `
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="px-1 flex items-center justify-between text-[10px] text-slate-500 font-semibold">
-          <span>Победа: 3 очка • Ничья: 1 • Поражение: 0</span>
-          <span>Мячи = ЗМ:ПМ</span>
-        </div>
-      `;
-
+      html += `</tbody></table></div></div>`;
       app.innerHTML = html;
     }
 
-    // === 4. СТАТИСТИКА ТУРНИРА ===
     function renderStatsTab(app) {
       const allPlayers = [];
       state.teams.forEach(team => {
         team.players.forEach(p => {
           const st = getPlayerStats(p);
-          allPlayers.push({
-            id: p.id,
-            teamId: team.id,
-            name: p.name,
-            photo: p.photo,
-            teamName: team.name,
-            goals: st.goals,
-            assists: st.assists,
-            gp: st.gp
-          });
+          allPlayers.push({ id: p.id, teamId: team.id, name: p.name, photo: p.photo, teamName: team.name, goals: st.goals, assists: st.assists, gp: st.gp });
         });
       });
 
@@ -1244,25 +1074,16 @@
         </div>
 
         <div class="grid grid-cols-3 gap-1.5 bg-white/[0.04] p-1.5 rounded-2xl border border-white/[0.08]">
-          <button onclick="statsSubTab='gp'; render();" class="py-2.5 px-2 rounded-xl text-[11px] font-extrabold uppercase tracking-wide transition ${statsSubTab === 'gp' ? 'volt-btn text-black' : 'text-slate-400'}">
-            Гол + Пас
-          </button>
-          <button onclick="statsSubTab='goals'; render();" class="py-2.5 px-2 rounded-xl text-[11px] font-extrabold uppercase tracking-wide transition ${statsSubTab === 'goals' ? 'volt-btn text-black' : 'text-slate-400'}">
-            Бомбардиры
-          </button>
-          <button onclick="statsSubTab='assists'; render();" class="py-2.5 px-2 rounded-xl text-[11px] font-extrabold uppercase tracking-wide transition ${statsSubTab === 'assists' ? 'volt-btn text-black' : 'text-slate-400'}">
-            Ассистенты
-          </button>
+          <button onclick="statsSubTab='gp'; render();" class="py-2.5 px-2 rounded-xl text-[11px] font-extrabold uppercase tracking-wide transition ${statsSubTab === 'gp' ? 'volt-btn text-black' : 'text-slate-400'}">Гол + Пас</button>
+          <button onclick="statsSubTab='goals'; render();" class="py-2.5 px-2 rounded-xl text-[11px] font-extrabold uppercase tracking-wide transition ${statsSubTab === 'goals' ? 'volt-btn text-black' : 'text-slate-400'}">Бомбардиры</button>
+          <button onclick="statsSubTab='assists'; render();" class="py-2.5 px-2 rounded-xl text-[11px] font-extrabold uppercase tracking-wide transition ${statsSubTab === 'assists' ? 'volt-btn text-black' : 'text-slate-400'}">Ассистенты</button>
         </div>
 
         ${leader ? `
           <div onclick="openPlayerModal('${leader.teamId}', '${leader.id}')" class="stadium-card pitch-pattern rounded-3xl p-4 border border-[#c6ff00]/35 flex items-center justify-between gap-3 cursor-pointer active:scale-[0.99]">
             <div class="flex items-center gap-3.5 min-w-0">
               <div class="relative shrink-0">
-                ${leader.photo
-                  ? `<img src="${leader.photo}" class="w-16 h-16 rounded-2xl object-cover border-2 border-[#c6ff00]" />`
-                  : `<div class="w-16 h-16 rounded-2xl bg-[#c6ff00]/15 border-2 border-[#c6ff00] flex items-center justify-center font-display text-xl font-black text-[#c6ff00]">#1</div>`
-                }
+                ${leader.photo ? `<img src="${leader.photo}" class="w-16 h-16 rounded-2xl object-cover border-2 border-[#c6ff00]" />` : `<div class="w-16 h-16 rounded-2xl bg-[#c6ff00]/15 border-2 border-[#c6ff00] flex items-center justify-center font-display text-xl font-black text-[#c6ff00]">#1</div>`}
                 <span class="absolute -top-2 -left-2 w-6 h-6 rounded-lg volt-btn font-display text-[11px] font-black flex items-center justify-center">1</span>
               </div>
               <div class="min-w-0">
@@ -1272,12 +1093,8 @@
               </div>
             </div>
             <div class="text-right shrink-0 bg-black/50 px-3 py-2 rounded-2xl border border-white/10">
-              <div class="font-display text-2xl font-black text-[#c6ff00] leading-none">
-                ${statsSubTab === 'gp' ? leader.gp : (statsSubTab === 'goals' ? leader.goals : leader.assists)}
-              </div>
-              <div class="text-[9px] font-extrabold uppercase text-slate-400 mt-1">
-                ${statsSubTab === 'gp' ? 'Г+П' : (statsSubTab === 'goals' ? 'Голов' : 'Пасов')}
-              </div>
+              <div class="font-display text-2xl font-black text-[#c6ff00] leading-none">${statsSubTab === 'gp' ? leader.gp : (statsSubTab === 'goals' ? leader.goals : leader.assists)}</div>
+              <div class="text-[9px] font-extrabold uppercase text-slate-400 mt-1">${statsSubTab === 'gp' ? 'Г+П' : (statsSubTab === 'goals' ? 'Голов' : 'Пасов')}</div>
             </div>
           </div>
         ` : ""}
@@ -1291,7 +1108,6 @@
               <span class="w-8 text-center text-[#c6ff00]">Г+П</span>
             </div>
           </div>
-
           <div class="divide-y divide-white/[0.06]">
       `;
 
@@ -1306,16 +1122,12 @@
           <div onclick="openPlayerModal('${p.teamId}', '${p.id}')" class="px-3.5 py-3 flex items-center justify-between gap-2 active:bg-white/[0.04] cursor-pointer">
             <div class="flex items-center gap-2.5 min-w-0 flex-1">
               ${rankEl}
-              ${p.photo
-                ? `<img src="${p.photo}" class="w-10 h-10 rounded-xl object-cover border border-white/15 shrink-0" />`
-                : `<div class="w-10 h-10 rounded-xl bg-white/[0.05] border border-white/10 flex items-center justify-center text-xs font-extrabold text-slate-400 shrink-0">${esc(p.name.charAt(0))}</div>`
-              }
+              ${p.photo ? `<img src="${p.photo}" class="w-10 h-10 rounded-xl object-cover border border-white/15 shrink-0" />` : `<div class="w-10 h-10 rounded-xl bg-white/[0.05] border border-white/10 flex items-center justify-center text-xs font-extrabold text-slate-400 shrink-0">${esc(p.name.charAt(0))}</div>`}
               <div class="min-w-0 flex-1">
                 <p class="text-sm font-extrabold text-white truncate">${esc(p.name)}</p>
                 <p class="text-[11px] text-slate-400 truncate">${esc(p.teamName)}</p>
               </div>
             </div>
-
             <div class="flex items-center gap-3 shrink-0 text-xs">
               <span class="w-5 text-center font-bold ${statsSubTab === 'goals' ? 'text-[#c6ff00] font-black text-sm' : 'text-slate-300'}">${p.goals}</span>
               <span class="w-5 text-center font-bold ${statsSubTab === 'assists' ? 'text-[#c6ff00] font-black text-sm' : 'text-slate-300'}">${p.assists}</span>
@@ -1324,16 +1136,12 @@
           </div>
         `;
       });
-
       html += `</div></div>`;
       app.innerHTML = html;
     }
 
-    // === МОДАЛКА ССЫЛОК И ОБЛАКА ===
     function openCloudModal() {
-      // Автоматически строим чистый базовый URL без параметров
       const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-      
       document.getElementById("viewer-link-preview").textContent = cleanUrl;
       document.getElementById("admin-link-preview").textContent = `${cleanUrl}?admin=${state.adminSecret}`;
 
@@ -1372,7 +1180,6 @@
       alert("Настройки сохранены!");
     }
 
-    // === МОДАЛКА СБРОСА СЕЗОНА ===
     function openResetModal() {
       if (!isDev) return;
       document.getElementById("reset-modal").classList.remove("hidden");
@@ -1387,11 +1194,7 @@
       if (!isDev) return;
       state.matches = [];
       if (keepTeams) {
-        state.teams.forEach(team => {
-          team.players.forEach(p => {
-            p.logs = [];
-          });
-        });
+        state.teams.forEach(team => { team.players.forEach(p => { p.logs = []; }); });
       } else {
         state.teams = createDefaultTeams();
       }
@@ -1400,10 +1203,14 @@
       render();
     }
 
-    // СТАРТ ПРИЛОЖЕНИЯ
-    updateModeUI();
-    switchTab("teams");
-    syncFromCloud();
+    // Автоматическая загрузка данных из облака при старте
+    async function initApp() {
+      updateModeUI();
+      switchTab("teams");
+      await syncFromCloud();
+    }
+
+    initApp();
   </script>
 </body>
 </html>
