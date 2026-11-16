@@ -191,7 +191,7 @@
         <div class="border-t border-white/10 pt-3 space-y-2">
           <p class="text-[11px] font-extrabold uppercase text-emerald-400">Облако Supabase</p>
           <input id="sb-url-input" type="text" placeholder="https://xxxx.supabase.co" class="w-full bg-black/50 border border-white/15 rounded-xl px-3 py-2 text-xs text-white" />
-          <input id="sb-key-input" type="text" placeholder="Anon Public Key (eyJ...)" class="w-full bg-black/50 border border-white/15 rounded-xl px-3 py-2 text-xs text-white" />
+          <input id="sb-key-input" type="text" placeholder="Publishable / Anon Key" class="w-full bg-black/50 border border-white/15 rounded-xl px-3 py-2 text-xs text-white" />
         </div>
         <button onclick="saveSettings()" class="w-full py-3 rounded-xl volt-btn font-display text-xs font-black uppercase">Сохранить настройки</button>
 
@@ -257,7 +257,7 @@
     const STORAGE_KEY = "football_league_v4";
 
     const HARDCODED_SUPABASE_URL = "https://wmkobbusznoeamnfkatn.supabase.co";
-    const HARDCODED_SUPABASE_KEY = "Sb_publishable_fqyLqgM24h-U3Y6cJA5Yug_fjIQ2inv";
+    const HARDCODED_SUPABASE_KEY = "sb_publishable_fqyLqgM24h-U3Y6cJA5Yug_fjIQ2inv";
 
     const JERSEY_THEMES = [
       { name: "Белые", gradient: "from-zinc-100 via-white to-zinc-300", text: "text-zinc-950", accent: "#ffffff", border: "border-white/40", glow: "rgba(255,255,255,0.18)" },
@@ -304,18 +304,29 @@
     let activePlayerRef = null;
     let statsSubTab = "gp";
 
+    function sanitizeKey(rawKey) {
+      const k = (rawKey || "").trim();
+      if (!k || k.startsWith("Sb_publishable_")) return HARDCODED_SUPABASE_KEY;
+      return k;
+    }
+
     function loadLocalState() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) return { ...createDefaultData(), ...JSON.parse(raw) };
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          const merged = { ...createDefaultData(), ...parsed };
+          merged.sbKey = sanitizeKey(merged.sbKey);
+          return merged;
+        }
       } catch (e) {}
       return createDefaultData();
     }
 
     async function saveData() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      const url = state.sbUrl || HARDCODED_SUPABASE_URL;
-      const key = state.sbKey || HARDCODED_SUPABASE_KEY;
+      const url = (state.sbUrl || HARDCODED_SUPABASE_URL).trim();
+      const key = sanitizeKey(state.sbKey);
       if (!url || !key) return;
 
       try {
@@ -344,8 +355,8 @@
     }
 
     async function syncFromCloud() {
-      const url = state.sbUrl || HARDCODED_SUPABASE_URL;
-      const key = state.sbKey || HARDCODED_SUPABASE_KEY;
+      const url = (state.sbUrl || HARDCODED_SUPABASE_URL).trim();
+      const key = sanitizeKey(state.sbKey);
       if (!url || !key) return;
 
       try {
@@ -361,7 +372,9 @@
         }
         const rows = await res.json();
         if (rows?.[0]?.data && Object.keys(rows[0].data).length > 0) {
-          state = { ...createDefaultData(), ...rows[0].data };
+          const cloudData = rows[0].data;
+          state = { ...createDefaultData(), ...cloudData };
+          state.sbKey = sanitizeKey(state.sbKey);
           localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
           render();
           if (activePlayerRef) renderPlayerModal();
@@ -1237,11 +1250,11 @@
       const newPin = document.getElementById("new-pin-input").value.trim();
       const newSecret = document.getElementById("admin-secret-input").value.trim();
       const sbUrl = document.getElementById("sb-url-input").value.trim();
-      const sbKey = document.getElementById("sb-key-input").value.trim();
+      const sbKey = sanitizeKey(document.getElementById("sb-key-input").value);
 
       if (newPin) state.pin = newPin;
       if (newSecret) state.adminSecret = newSecret;
-      state.sbUrl = sbUrl;
+      state.sbUrl = sbUrl || HARDCODED_SUPABASE_URL;
       state.sbKey = sbKey;
 
       saveData();
@@ -1272,7 +1285,6 @@
       render();
     }
 
-    // Автоматическая загрузка данных из облака при старте и каждые 30 секунд
     async function initApp() {
       updateModeUI();
       switchTab("teams");
