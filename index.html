@@ -155,14 +155,26 @@
             <i data-lucide="refresh-cw" class="w-3 h-3 text-[#c6ff00]"></i> Обновить
           </button>
         </div>
-        <div class="space-y-2.5 text-[11px]">
+        <div class="space-y-3 text-[11px]">
           <div>
             <span class="text-slate-400 block mb-1">1. Для друзей (Зритель):</span>
-            <code id="viewer-link-preview" class="block bg-black/80 border border-white/10 p-2.5 rounded-xl text-slate-200 break-all font-mono"></code>
+            <div class="flex items-center gap-2 bg-black/80 border border-white/10 p-2.5 rounded-xl">
+              <a id="viewer-link-preview" href="https://maks-txt.github.io/football-_-league/" target="_blank" rel="noopener noreferrer" class="flex-1 text-slate-200 underline decoration-white/30 hover:text-[#c6ff00] break-all font-mono">https://maks-txt.github.io/football-_-league/</a>
+              <button onclick="copyLink('viewer', this)" title="Скопировать ссылку" class="shrink-0 px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold flex items-center gap-1 active:scale-90 transition">
+                <i data-lucide="copy" class="w-3.5 h-3.5 text-[#c6ff00]"></i>
+                <span>Копия</span>
+              </button>
+            </div>
           </div>
           <div>
             <span class="text-slate-400 block mb-1">2. Для тебя (Тренер):</span>
-            <code id="admin-link-preview" class="block bg-black/80 border border-[#c6ff00]/30 p-2.5 rounded-xl text-[#c6ff00] break-all font-mono"></code>
+            <div class="flex items-center gap-2 bg-black/80 border border-[#c6ff00]/30 p-2.5 rounded-xl">
+              <a id="admin-link-preview" href="https://maks-txt.github.io/football-_-league/?admin=coach2026" target="_blank" rel="noopener noreferrer" class="flex-1 text-[#c6ff00] underline decoration-[#c6ff00]/40 break-all font-mono">https://maks-txt.github.io/football-_-league/?admin=coach2026</a>
+              <button onclick="copyLink('admin', this)" title="Скопировать ссылку" class="shrink-0 px-2.5 py-1.5 rounded-lg bg-[#c6ff00]/15 hover:bg-[#c6ff00]/25 text-[#c6ff00] font-bold flex items-center gap-1 active:scale-90 transition">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                <span>Копия</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -239,6 +251,7 @@
   </div>
 
   <script>
+    const APP_BASE_URL = "https://maks-txt.github.io/football-_-league/";
     const DEFAULT_PIN = "0000";
     const DEFAULT_SECRET = "coach2026";
     const STORAGE_KEY = "football_league_v4";
@@ -303,19 +316,30 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       const url = state.sbUrl || HARDCODED_SUPABASE_URL;
       const key = state.sbKey || HARDCODED_SUPABASE_KEY;
-      if (url && key) {
-        try {
-          await fetch(`${url}/rest/v1/league_state?id=eq.main`, {
-            method: "PATCH",
-            headers: {
-              "apikey": key,
-              "Authorization": `Bearer ${key}`,
-              "Content-Type": "application/json",
-              "Prefer": "return=minimal"
-            },
-            body: JSON.stringify({ data: state, updated_at: new Date().toISOString() })
-          });
-        } catch (e) {}
+      if (!url || !key) return;
+
+      try {
+        const res = await fetch(`${url}/rest/v1/league_state`, {
+          method: "POST",
+          headers: {
+            "apikey": key,
+            "Authorization": `Bearer ${key}`,
+            "Content-Type": "application/json",
+            "Prefer": "resolution=merge-duplicates,return=minimal"
+          },
+          body: JSON.stringify({
+            id: "main",
+            data: state,
+            updated_at: new Date().toISOString()
+          })
+        });
+        if (!res.ok) {
+          console.error("❌ Supabase SAVE failed:", res.status, await res.text());
+        } else {
+          console.log("✅ Saved to cloud");
+        }
+      } catch (e) {
+        console.error("❌ Supabase SAVE exception:", e);
       }
     }
 
@@ -323,17 +347,31 @@
       const url = state.sbUrl || HARDCODED_SUPABASE_URL;
       const key = state.sbKey || HARDCODED_SUPABASE_KEY;
       if (!url || !key) return;
+
       try {
         const res = await fetch(`${url}/rest/v1/league_state?id=eq.main&select=data`, {
-          headers: { "apikey": key, "Authorization": `Bearer ${key}` }
+          headers: {
+            "apikey": key,
+            "Authorization": `Bearer ${key}`
+          }
         });
+        if (!res.ok) {
+          console.error("❌ Supabase LOAD failed:", res.status, await res.text());
+          return;
+        }
         const rows = await res.json();
-        if (rows && rows[0] && rows[0].data) {
+        if (rows?.[0]?.data && Object.keys(rows[0].data).length > 0) {
           state = { ...createDefaultData(), ...rows[0].data };
           localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
           render();
+          if (activePlayerRef) renderPlayerModal();
+          console.log("✅ Loaded from cloud");
+        } else {
+          console.warn("⚠️ Строки 'main' в облаке нет или она пустая");
         }
-      } catch (e) {}
+      } catch (e) {
+        console.error("❌ Supabase LOAD exception:", e);
+      }
     }
 
     async function forceCloudSync() {
@@ -1141,9 +1179,16 @@
     }
 
     function openCloudModal() {
-      const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-      document.getElementById("viewer-link-preview").textContent = cleanUrl;
-      document.getElementById("admin-link-preview").textContent = `${cleanUrl}?admin=${state.adminSecret}`;
+      const viewerUrl = APP_BASE_URL;
+      const adminUrl = `${APP_BASE_URL}?admin=${state.adminSecret}`;
+
+      const viewerEl = document.getElementById("viewer-link-preview");
+      viewerEl.textContent = viewerUrl;
+      viewerEl.href = viewerUrl;
+
+      const adminEl = document.getElementById("admin-link-preview");
+      adminEl.textContent = adminUrl;
+      adminEl.href = adminUrl;
 
       const devBlock = document.getElementById("dev-settings-block");
       if (isDev) {
@@ -1158,6 +1203,30 @@
 
       document.getElementById("cloud-modal").classList.remove("hidden");
       lucide.createIcons();
+    }
+
+    async function copyLink(type, btn) {
+      const url = type === "admin"
+        ? `${APP_BASE_URL}?admin=${state.adminSecret}`
+        : APP_BASE_URL;
+
+      try {
+        await navigator.clipboard.writeText(url);
+      } catch (e) {
+        const ta = document.createElement("textarea");
+        ta.value = url;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      }
+
+      const labelEl = btn.querySelector("span");
+      const origText = labelEl.textContent;
+      labelEl.textContent = "Готово!";
+      setTimeout(() => { labelEl.textContent = origText; }, 1600);
     }
 
     function closeCloudModal() {
@@ -1203,11 +1272,12 @@
       render();
     }
 
-    // Автоматическая загрузка данных из облака при старте
+    // Автоматическая загрузка данных из облака при старте и каждые 30 секунд
     async function initApp() {
       updateModeUI();
       switchTab("teams");
       await syncFromCloud();
+      setInterval(syncFromCloud, 30000);
     }
 
     initApp();
